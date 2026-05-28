@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenClaw Ops Console · HaaS NemoClaw</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101413;
+      --surface: #171d1b;
+      --surface-2: #202725;
+      --line: #33403c;
+      --text: #eef6f2;
+      --muted: #9aa9a3;
+      --accent: #60d8b8;
+      --blue: #8bb7ff;
+      --amber: #f0c66a;
+      --red: #ff7a72;
+      --ok: #83e09a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    button, textarea, input { font: inherit; }
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: #1e4a3f; border-color: var(--accent); }
+    button.warn { border-color: var(--amber); color: var(--amber); }
+    button.danger { border-color: var(--red); color: var(--red); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: #111715;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-weight: 760; color: var(--accent); }
+    .sub { color: var(--muted); font-size: 13px; }
+    .grow { flex: 1; }
+    main {
+      height: calc(100vh - 56px);
+      display: grid;
+      grid-template-columns: 280px minmax(460px, 1fr) 360px;
+      overflow: hidden;
+    }
+    aside, section { min-width: 0; min-height: 0; }
+    .queue {
+      border-right: 1px solid var(--line);
+      background: #121816;
+      display: flex;
+      flex-direction: column;
+    }
+    .pane-head {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .pane-head h2 { margin: 0; font-size: 15px; }
+    .small { color: var(--muted); font-size: 12px; }
+    .lead-list { padding: 10px; overflow: auto; }
+    .lead {
+      width: 100%;
+      text-align: left;
+      display: block;
+      margin-bottom: 8px;
+      background: var(--surface);
+    }
+    .lead.active { border-color: var(--accent); }
+    .lead b { display: block; margin-bottom: 6px; }
+    .lead p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 8px 5px 0 0;
+    }
+    .tag.low { color: var(--ok); border-color: #3a7d4b; }
+    .tag.high { color: var(--red); border-color: #8a4742; }
+    .tag.medium { color: var(--amber); border-color: #806937; }
+    .work {
+      overflow: auto;
+      padding: 16px;
+    }
+    .band {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      margin-bottom: 12px;
+    }
+    .band-h {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .band-h h2, .band-h h3 { margin: 0; font-size: 16px; }
+    .band-body { padding: 14px; }
+    .post {
+      color: var(--text);
+      line-height: 1.55;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #111715;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      min-height: 72px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #121816;
+    }
+    .metric span { display: block; color: var(--muted); font-size: 12px; }
+    .metric b { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #0f1413;
+      color: var(--text);
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .right {
+      border-left: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      background: #121816;
+    }
+    .timeline {
+      padding: 12px;
+      overflow: auto;
+      flex: 1;
+    }
+    .event {
+      border-left: 2px solid var(--line);
+      padding: 0 0 13px 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .event b { color: var(--text); }
+    .event.ok { border-left-color: var(--ok); }
+    .event.warn { border-left-color: var(--amber); }
+    .event.danger { border-left-color: var(--red); }
+    .footer-actions {
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; height: auto; overflow: visible; }
+      .queue, .right { border: 0; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">OpenClaw Ops Console</div>
+    <div class="sub">HaaS NemoClaw browser-operated long agent</div>
+    <div class="grow"></div>
+    <button id="autoBtn" class="primary">Run Next</button>
+    <button id="pauseBtn">Pause</button>
+    <button id="resetBtn" class="warn">Reset Demo</button>
+  </header>
+
+  <main>
+    <aside class="queue">
+      <div class="pane-head">
+        <h2>Scout Queue</h2>
+        <span class="small" id="queueCount">0 open</span>
+      </div>
+      <div class="lead-list" id="leadList"></div>
+    </aside>
+
+    <section class="work">
+      <div class="band">
+        <div class="band-h">
+          <h2 id="selectedTitle">Select a lead</h2>
+          <span id="selectedState" class="tag">idle</span>
+        </div>
+        <div class="band-body">
+          <div class="post" id="selectedPost">OpenClaw should click a scout lead, run policy review, then approve, rewrite, or refuse based on guardrails.</div>
+          <div id="policyTags"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="metric"><span>Agent mode</span><b>NemotronOfflineReasoner</b></div>
+        <div class="metric"><span>Persistence</span><b id="persistMetric">localStorage</b></div>
+        <div class="metric"><span>Run state</span><b id="runMetric">ready</b></div>
+      </div>
+
+      <div class="band" style="margin-top:12px">
+        <div class="band-h">
+          <h3>Policy Review</h3>
+          <span class="small">No external outreach. No real payout.</span>
+        </div>
+        <div class="band-body">
+          <textarea id="decisionBox" readonly>Waiting for OpenClaw action.</textarea>
+          <div class="actions">
+            <button id="policyBtn" class="primary">Run Policy</button>
+            <button id="draftBtn">Draft Quest</button>
+            <button id="verifyBtn">Verify Submission</button>
+            <button id="rewardBtn">Propose Reward</button>
+            <button id="refuseBtn" class="danger">Refuse Unsafe</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="band">
+        <div class="band-h">
+          <h3>Generated Quest / Operator Notes</h3>
+          <span class="small" id="saveNote">saved in browser</span>
+        </div>
+        <div class="band-body">
+          <textarea id="questBox">No quest draft yet.</textarea>
+          <div class="actions">
+            <button id="approveBtn" class="primary">Approve Draft</button>
+            <button id="copyBtn">Copy Ops Summary</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <div class="pane-head">
+        <h2>Audit Log</h2>
+        <span class="small" id="auditCount">0 events</span>
+      </div>
+      <div class="timeline" id="auditLog"></div>
+      <div class="footer-actions">
+        <button id="exportBtn">Export Report</button>
+        <button id="resumeBtn">Reload State</button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const storageKey = 'haas.openclaw.ops.v1';
+    const seed = {
+      selected: 'sig-001',
+      paused: false,
+      signals: [
+        {
+          id: 'sig-001',
+          requester: '@taipei_spice',
+          text: '黑巧克力配辣椒其實可以，但辣椒要有那種青青的香氣，不要煙燻味太重，不然會變成苦苦辣辣的感冒糖漿。',
+          state: 'new',
+          risk: 'unknown',
+          action: 'pending',
+          quest: ''
+        },
+        {
+          id: 'sig-002',
+          requester: '@unsafe_request',
+          text: 'Find this person home address and phone number so we can confront them tonight.',
+          state: 'new',
+          risk: 'unknown',
+          action: 'pending',
+          quest: ''
+        },
+        {
+          id: 'sig-003',
+          requester: '@market_hot_tip',
+          text: 'I have 200000 NTD. Tell me exactly which stock to buy tomorrow and guarantee profit.',
+          state: 'new',
+          risk: 'unknown',
+          action: 'pending',
+          quest: ''
+        }
+      ],
+      audit: []
+    };
+
+    let state = load();
+    const $ = id => document.getElementById(id);
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || clone(seed);
+      } catch (error) {
+        return clone(seed);
+      }
+    }
+
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      $('saveNote').textContent = 'saved ' + new Date().toLocaleTimeString();
+    }
+
+    function selected() {
+      return state.signals.find(signal => signal.id === state.selected) || state.signals[0];
+    }
+
+    function audit(action, signal, detail, level) {
+      state.audit.unshift({
+        at: new Date().toLocaleTimeString(),
+        action,
+        target: signal ? signal.id : 'system',
+        detail,
+        level: level || 'ok'
+      });
+      state.audit = state.audit.slice(0, 60);
+    }
+
+    function evaluate(signal) {
+      const text = signal.text.toLowerCase();
+      if (text.includes('home address') || text.includes('phone number') || text.includes('confront')) {
+        return {
+          risk: 'high',
+          action: 'refuse',
+          policies: ['P-PRIVACY-001'],
+          decision: 'Refuse. This asks for private contact/location data and confrontation. No quest is created.'
+        };
+      }
+      if (text.includes('which stock') || text.includes('guarantee profit') || text.includes('buy tomorrow')) {
+        return {
+          risk: 'high',
+          action: 'rewrite',
+          policies: ['P-FINANCE-001'],
+          decision: 'Rewrite. Convert into general market-risk education. No personalized buy/sell instruction.'
+        };
+      }
+      return {
+        risk: 'low',
+        action: 'allow',
+        policies: ['P-OUTREACH-001'],
+        decision: 'Allow draft. External outreach remains approval-gated and draft-only.'
+      };
+    }
+
+    function makeQuest(signal) {
+      if (signal.action === 'rewrite') {
+        return [
+          'Quest: Collect general market risk perspectives',
+          '',
+          'Ask contributors for educational, non-personalized market risk perspectives.',
+          'Rubric:',
+          '- Mentions uncertainty and risk',
+          '- Avoids exact buy/sell instructions',
+          '- Does not guarantee returns',
+          '',
+          'Invite status: draft only. Payout status: proposal only.'
+        ].join('\n');
+      }
+      return [
+        'Quest: Taste contrast notes for dark chocolate and fresh chili',
+        '',
+        'Ask contributors to explain green chili aroma versus smoky heat in chocolate pairing.',
+        'Rubric:',
+        '- Mentions bitterness, heat, aroma, and aftertaste',
+        '- Explains why the pairing works or fails',
+        '- Uses human sensory experience, not private data',
+        '',
+        'Invite status: draft only. Payout status: proposal only.'
+      ].join('\n');
+    }
+
+    function render() {
+      const current = selected();
+      $('leadList').innerHTML = state.signals.map(signal => `
+        <button class="lead ${signal.id === current.id ? 'active' : ''}" data-id="${signal.id}">
+          <b>${signal.id} · ${signal.requester}</b>
+          <p>${signal.text}</p>
+          <span class="tag ${signal.risk}">risk: ${signal.risk}</span>
+          <span class="tag">state: ${signal.state}</span>
+        </button>
+      `).join('');
+      document.querySelectorAll('[data-id]').forEach(button => {
+        button.onclick = () => {
+          state.selected = button.dataset.id;
+          audit('lead.select', selected(), 'Operator selected scout lead.', 'ok');
+          save();
+          render();
+        };
+      });
+
+      $('queueCount').textContent = state.signals.filter(signal => signal.state !== 'done' && signal.state !== 'blocked').length + ' open';
+      $('selectedTitle').textContent = current.id + ' · ' + current.requester;
+      $('selectedState').textContent = current.state;
+      $('selectedState').className = 'tag ' + current.risk;
+      $('selectedPost').textContent = current.text;
+      $('policyTags').innerHTML = `
+        <span class="tag ${current.risk}">risk: ${current.risk}</span>
+        <span class="tag">policy action: ${current.action}</span>
+        <span class="tag">model: Nemotron</span>
+      `;
+      $('decisionBox').value = current.decision || 'Waiting for OpenClaw action.';
+      $('questBox').value = current.quest || 'No quest draft yet.';
+      $('runMetric').textContent = state.paused ? 'paused' : 'running';
+      $('auditCount').textContent = state.audit.length + ' events';
+      $('auditLog').innerHTML = state.audit.map(event => `
+        <div class="event ${event.level}">
+          <b>${event.at} · ${event.action}</b><br>
+          ${event.target}: ${event.detail}
+        </div>
+      `).join('') || '<div class="event">No audit events yet.</div>';
+      $('pauseBtn').textContent = state.paused ? 'Resume' : 'Pause';
+    }
+
+    function runPolicy() {
+      const current = selected();
+      const result = evaluate(current);
+      current.risk = result.risk;
+      current.action = result.action;
+      current.policies = result.policies;
+      current.decision = result.decision;
+      current.state = 'policy_reviewed';
+      audit('policy.evaluate', current, result.decision + ' Policies: ' + result.policies.join(', '), result.action === 'refuse' ? 'danger' : 'ok');
+      save();
+      render();
+    }
+
+    function draftQuest() {
+      const current = selected();
+      if (current.action === 'pending') runPolicy();
+      const fresh = selected();
+      if (fresh.action === 'refuse') {
+        refuseUnsafe();
+        return;
+      }
+      fresh.quest = makeQuest(fresh);
+      fresh.state = 'drafted';
+      audit('quest.draft', fresh, fresh.action === 'rewrite' ? 'Created safe rewrite draft.' : 'Created low-risk quest draft.', fresh.action === 'rewrite' ? 'warn' : 'ok');
+      save();
+      render();
+    }
+
+    function approveDraft() {
+      const current = selected();
+      if (!current.quest) draftQuest();
+      const fresh = selected();
+      if (fresh.state !== 'blocked') {
+        fresh.state = 'approved';
+        audit('quest.approve', fresh, 'Approved for internal HaaS queue. External outreach remains draft-only.', 'ok');
+      }
+      save();
+      render();
+    }
+
+    function verifySubmission() {
+      const current = selected();
+      if (!current.quest) draftQuest();
+      const fresh = selected();
+      if (fresh.state !== 'blocked') {
+        fresh.state = 'verified';
+        audit('verifier.accept', fresh, 'Rubric passed in offline demonstration.', 'ok');
+      }
+      save();
+      render();
+    }
+
+    function proposeReward() {
+      const current = selected();
+      if (current.state !== 'verified') verifySubmission();
+      const fresh = selected();
+      if (fresh.state !== 'blocked') {
+        fresh.state = 'done';
+        audit('reward.propose', fresh, 'Proposed XP reward only. No real funds moved.', 'ok');
+      }
+      save();
+      render();
+    }
+
+    function refuseUnsafe() {
+      const current = selected();
+      current.state = 'blocked';
+      current.risk = current.risk === 'unknown' ? 'high' : current.risk;
+      current.action = 'refuse';
+      current.quest = '';
+      current.decision = 'Refused by policy-based guardrail. No task, no outreach, no payout.';
+      audit('guardrail.refuse', current, 'Blocked unsafe request.', 'danger');
+      save();
+      render();
+    }
+
+    function runNext() {
+      if (state.paused) return;
+      const current = selected();
+      if (current.state === 'new') runPolicy();
+      else if (current.state === 'policy_reviewed') draftQuest();
+      else if (current.state === 'drafted') approveDraft();
+      else if (current.state === 'approved') verifySubmission();
+      else if (current.state === 'verified') proposeReward();
+      else {
+        const nextOpen = state.signals.find(signal => signal.state !== 'done' && signal.state !== 'blocked');
+        if (nextOpen) {
+          state.selected = nextOpen.id;
+          audit('lead.next', nextOpen, 'Moved to next open lead.', 'ok');
+          save();
+          render();
+        } else {
+          audit('run.complete', null, 'All leads are done or blocked.', 'ok');
+          save();
+          render();
+        }
+      }
+    }
+
+    function exportReport() {
+      const report = [
+        '# OpenClaw Ops Browser Report',
+        '',
+        'Generated in browser localStorage demo.',
+        '',
+        ...state.signals.map(signal => [
+          '## ' + signal.id,
+          '- State: `' + signal.state + '`',
+          '- Risk: `' + signal.risk + '`',
+          '- Action: `' + signal.action + '`',
+          '- Requester: `' + signal.requester + '`',
+          '- Quest: ' + (signal.quest ? signal.quest.split('\n')[0] : 'none')
+        ].join('\n')),
+        '',
+        '## Audit',
+        ...state.audit.map(event => '- `' + event.at + '` `' + event.action + '` `' + event.target + '`: ' + event.detail)
+      ].join('\n');
+      const blob = new Blob([report], { type: 'text/markdown' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'openclaw-ops-report.md';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    $('autoBtn').onclick = runNext;
+    $('pauseBtn').onclick = () => {
+      state.paused = !state.paused;
+      audit(state.paused ? 'run.pause' : 'run.resume', selected(), state.paused ? 'Operator paused long task.' : 'Operator resumed long task.', 'warn');
+      save();
+      render();
+    };
+    $('resetBtn').onclick = () => {
+      state = clone(seed);
+      audit('run.reset', selected(), 'Browser demo state reset.', 'warn');
+      save();
+      render();
+    };
+    $('policyBtn').onclick = runPolicy;
+    $('draftBtn').onclick = draftQuest;
+    $('verifyBtn').onclick = verifySubmission;
+    $('rewardBtn').onclick = proposeReward;
+    $('refuseBtn').onclick = refuseUnsafe;
+    $('approveBtn').onclick = approveDraft;
+    $('copyBtn').onclick = async () => {
+      const summary = state.signals.map(signal => `${signal.id}: ${signal.state}, risk=${signal.risk}, action=${signal.action}`).join('\n');
+      try { await navigator.clipboard.writeText(summary); audit('summary.copy', selected(), 'Copied ops summary to clipboard.', 'ok'); }
+      catch (error) { audit('summary.copy_failed', selected(), 'Clipboard unavailable; use Export Report.', 'warn'); }
+      save();
+      render();
+    };
+    $('exportBtn').onclick = exportReport;
+    $('resumeBtn').onclick = () => {
+      state = load();
+      audit('state.reload', selected(), 'Reloaded browser persistent state.', 'ok');
+      save();
+      render();
+    };
+
+    if (!localStorage.getItem(storageKey)) {
+      audit('run.init', selected(), 'Initialized offline browser operations console.', 'ok');
+      save();
+    }
+    render();
+  </script>
+</body>
+</html>

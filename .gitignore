@@ -38,6 +38,7 @@ tmp/
 *.sqlite
 *.sqlite3
 *.db
+.nemoclaw/
 
 # Generated media and screenshots
 uploads/*.png
@@ -51,4 +52,3 @@ uploads/*.webp
 # Python local server artifacts
 __pycache__/
 *.pyc
-
